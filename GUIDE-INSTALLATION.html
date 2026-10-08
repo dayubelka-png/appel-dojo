@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Installer l'Appel du dojo</title>
+<style>
+:root{--bg:#F1F3F0;--surface:#fff;--ink:#16201A;--muted:#5B6A60;--line:#D5DCD4;--tatami:#2B7A51;--soft:#DCEFE3;--warn:#9A4A12;--warn-soft:#FCE9D9;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#101512;--surface:#19201B;--ink:#E8EEE9;--muted:#9AA99F;--line:#2C372F;--tatami:#3FA56F;--soft:#1C3426;--warn:#F0A066;--warn-soft:#3A2617;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:32px 16px 64px}
+h1{font:800 34px/1.1 "Arial Narrow",Arial,sans-serif;margin:0 0 8px}
+.lead{color:var(--muted);margin:0 0 24px}
+section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+h2{font:700 22px/1.2 "Arial Narrow",Arial,sans-serif;margin:0 0 4px;display:flex;gap:10px;align-items:baseline}
+h2 span{font:700 13px system-ui;color:var(--tatami);letter-spacing:.08em;text-transform:uppercase}
+.when{color:var(--muted);font-size:14px;margin:0 0 8px}
+ol{padding-left:22px;margin:8px 0}li{margin:6px 0}
+b.ui{background:var(--soft);padding:1px 6px;border-radius:5px;font-weight:600;white-space:nowrap}
+code{background:var(--bg);border:1px solid var(--line);padding:1px 6px;border-radius:5px;font:14px ui-monospace,Consolas,monospace;word-break:break-all}
+.note{background:var(--warn-soft);border-radius:10px;padding:10px 14px;margin-top:10px;font-size:15px}
+.note b{color:var(--warn)}
+</style>
+</head>
+<body>
+<main>
+<h1>Installer l'Appel du dojo</h1>
+<p class="lead">À faire une seule fois, sur un ordinateur puis sur la tablette (environ 30 minutes). Ensuite, la page fonctionne seule : elle lit ton fichier Excel sur OneDrive et le met à jour à chaque « Valider l'appel ».</p>
+
+<section>
+<h2><span>Étape 1</span>Créer l'espace Microsoft pour développeurs</h2>
+<p class="when">Pourquoi : Microsoft exige un « annuaire » pour autoriser une page à écrire dans OneDrive. Le compte Azure gratuit le crée automatiquement.</p>
+<ol>
+<li>Va sur <code>azure.microsoft.com/fr-fr/free</code> et clique sur <b class="ui">Commencer gratuitement</b>.</li>
+<li>Connecte-toi avec ton compte Microsoft (celui de ton OneDrive convient).</li>
+<li>Renseigne ton téléphone et une carte bancaire (crédit ou débit, pas de carte prépayée).</li>
+</ol>
+<div class="note"><b>Carte bancaire :</b> elle sert uniquement à vérifier ton identité. Microsoft bloque environ 1 $ puis l'annule ; rien n'est prélevé tant que tu ne passes pas toi-même au paiement à l'utilisation. L'inscription d'une page web comme celle-ci est gratuite.</div>
+</section>
+
+<section>
+<h2><span>Étape 2</span>Mettre la page en ligne (GitHub Pages, gratuit)</h2>
+<ol>
+<li>Crée un compte sur <code>github.com</code>.</li>
+<li>Clique sur <b class="ui">+</b> › <b class="ui">New repository</b>. Nom : <code>appel-dojo</code>, visibilité <b class="ui">Public</b>, puis <b class="ui">Create repository</b>.</li>
+<li>Clique sur <b class="ui">uploading an existing file</b> et glisse <b>tous les fichiers</b> de ce dossier : index.html, jszip.min.js, msal-browser.min.js, sw.js, manifest.webmanifest, icon-192.png et icon-512.png. Valide avec <b class="ui">Commit changes</b>.</li>
+<li>Va dans <b class="ui">Settings</b> › <b class="ui">Pages</b>. Dans « Branch », choisis <b class="ui">main</b> et <b class="ui">/ (root)</b>, puis <b class="ui">Save</b>.</li>
+<li>Après une à deux minutes, ta page est en ligne à l'adresse <code>https://TON-PSEUDO.github.io/appel-dojo/</code>. Note-la exactement, avec la barre finale.</li>
+</ol>
+<div class="note"><b>Confidentialité :</b> le dépôt GitHub ne contient que le code de la page, aucune donnée d'élève. Le fichier Excel reste sur ton OneDrive et sur la tablette.</div>
+</section>
+
+<section>
+<h2><span>Étape 3</span>Inscrire la page chez Microsoft</h2>
+<ol>
+<li>Va sur <code>portal.azure.com</code>, cherche <b class="ui">Microsoft Entra ID</b>, puis ouvre <b class="ui">Inscriptions d'applications</b> › <b class="ui">Nouvelle inscription</b>.</li>
+<li>Nom : <code>Appel du dojo</code>.</li>
+<li>Types de comptes pris en charge : <b class="ui">Comptes Microsoft personnels uniquement</b>.</li>
+<li>URI de redirection : plateforme <b class="ui">Application monopage (SPA)</b>, adresse = celle de l'étape 2, par exemple <code>https://TON-PSEUDO.github.io/appel-dojo/</code>.</li>
+<li>Clique sur <b class="ui">Inscrire</b>, puis copie l'<b class="ui">ID d'application (client)</b> affiché sur la page de l'application (format <code>1a2b3c4d-…</code>).</li>
+</ol>
+<p class="when">Pas besoin de secret ni de réglage d'autorisations : à la première connexion, Microsoft te demandera simplement d'autoriser l'accès à tes fichiers.</p>
+</section>
+
+<section>
+<h2><span>Étape 4</span>Installer sur la tablette Android</h2>
+<ol>
+<li>Ouvre l'adresse de l'étape 2 dans <b>Chrome</b>.</li>
+<li>Colle l'ID d'application, puis <b class="ui">Continuer</b>. La page affiche l'adresse de redirection attendue : elle doit être identique à celle déclarée à l'étape 3.</li>
+<li><b class="ui">Se connecter avec Microsoft</b>, avec le compte qui contient le fichier, puis accepte l'accès aux fichiers.</li>
+<li>Recherche « Appel » et touche ton fichier <i>Appel adhérents saison 2026-2027</i>.</li>
+<li>Menu <b class="ui">⋮</b> › <b class="ui">Ajouter à l'écran d'accueil</b> (ou <b class="ui">Installer l'application</b>). L'icône verte « Appel » s'ouvre ensuite en plein écran.</li>
+</ol>
+</section>
+
+<section>
+<h2><span>Au quotidien</span>Faire l'appel</h2>
+<ol>
+<li>Ouvre l'appli : le cours du jour et la séance du jour sont sélectionnés tout seuls.</li>
+<li>Touche les élèves présents (le bouton « Mode tablette » agrandit les cartes sur tout l'écran ; en cours chargé, les étiquettes deviennent des pastilles : rouge = santé, orange = autre info, « i » pour la fiche).</li>
+<li>Touche <b class="ui">Valider l'appel</b> : le fichier sur OneDrive est relu, les cases du jour sont cochées et le total du jour est mis à jour. Rien d'autre n'est modifié.</li>
+</ol>
+<div class="note"><b>Sans réseau au dojo :</b> les coches restent sur la tablette et partent automatiquement dès que le réseau revient (ou à la prochaine ouverture de l'appli).<br>
+<b>Fichier modifié sur l'ordinateur entre-temps :</b> la page relit la dernière version et y replace tes coches par nom d'élève et par date, sans écraser les modifications faites ailleurs.<br>
+<b>Fichier ouvert dans Excel au même moment :</b> OneDrive peut le verrouiller quelques minutes ; la page te prévient et garde les coches.<br>
+<b>Reconnexion :</b> de temps en temps, Microsoft peut redemander de toucher ton compte. Les coches ne sont jamais perdues.<br>
+<b>Sécurité :</b> la tablette garde une copie du fichier (dont les informations médicales) ; protège-la par un code de verrouillage.</div>
+</section>
+</main>
+</body>
+</html>

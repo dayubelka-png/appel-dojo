@@ -1,0 +1,16 @@
+{
+  "name": "Appel du dojo",
+  "short_name": "Appel",
+  "description": "Appel des cours de judo, synchronisé avec le fichier Excel sur OneDrive.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F1F3F0",
+  "theme_color": "#2B7A51",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

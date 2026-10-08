@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2B7A51">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Appel du dojo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}
+/* Layout tablette : en-tête (onglets, séance, compteur), grille de grandes cartes-élèves, barre des cours fixée en bas */
+:root{
+  --bg:#F1F3F0; --surface:#FFFFFF; --ink:#16201A; --muted:#5B6A60; --line:#D5DCD4;
+  --tatami:#2B7A51; --tatami-ink:#FFFFFF; --tatami-soft:#DCEFE3;
+  --warn:#9A4A12; --warn-soft:#FCE9D9; --alert:#B3261E; --alert-soft:#FBE3E1;
+  --font-name:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --font-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101512; --surface:#19201B; --ink:#E8EEE9; --muted:#9AA99F; --line:#2C372F;
+  --tatami:#3FA56F; --tatami-ink:#06140C; --tatami-soft:#1C3426;
+  --warn:#F0A066; --warn-soft:#3A2617; --alert:#F08A82; --alert-soft:#3D1D1B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101512; --surface:#19201B; --ink:#E8EEE9; --muted:#9AA99F; --line:#2C372F;
+  --tatami:#3FA56F; --tatami-ink:#06140C; --tatami-soft:#1C3426;
+  --warn:#F0A066; --warn-soft:#3A2617; --alert:#F08A82; --alert-soft:#3D1D1B; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px}
+.wrap{padding-inline:16px;padding-block:10px 170px;max-width:1280px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-block:6px 12px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand h1{margin:0;font-family:var(--font-name);font-weight:800;font-size:30px;line-height:1}
+.brand small{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px}
+.tab{font:700 19px var(--font-name);border:0;background:transparent;color:var(--muted);padding:8px 20px;border-radius:9px;cursor:pointer;min-height:44px}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:600 15px var(--font-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 16px;cursor:pointer;min-height:46px;display:inline-flex;align-items:center;gap:6px}
+.btn.primary{background:var(--tatami);border-color:var(--tatami);color:var(--tatami-ink)}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn:focus-visible,.kid:focus-visible,.info:focus-visible,.chip:focus-visible,.tab:focus-visible,.res:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--tatami);outline-offset:2px}
+input,select,textarea{font:500 16px var(--font-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:46px;width:100%;box-sizing:border-box}
+textarea{min-height:80px;resize:vertical}
+.notice{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--warn-soft);font-size:15px;line-height:1.45}
+.notice b{color:var(--warn)}
+/* Barre de séance */
+.session{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 20px;align-items:end;margin:16px 0 12px}
+.session h2{margin:0;font-family:var(--font-name);font-weight:800;font-size:34px;line-height:1}
+.session .sub{margin-top:4px}
+.sub{color:var(--muted);font-size:14px}
+.count{font-family:var(--font-name);font-weight:800;font-size:40px;line-height:1;font-variant-numeric:tabular-nums;text-align:right}
+.count span{color:var(--tatami)}
+.count small{font:600 14px var(--font-body);color:var(--muted);display:block;margin-top:2px}
+.controls{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls select{width:auto;min-width:190px;font-weight:700}
+.controls input[type=search]{flex:1 1 220px;width:auto}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{font:600 14px var(--font-body);border:0;background:transparent;color:var(--muted);padding:0 14px;min-height:46px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--tatami-soft);color:var(--ink)}
+/* Grille élèves */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.divider{grid-column:1/-1;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--warn);padding:10px 2px 0;border-bottom:2px solid var(--warn-soft)}
+.cardk{position:relative;min-width:0}
+.kid{width:100%;display:grid;grid-template-columns:56px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;row-gap:8px;align-items:center;text-align:left;min-height:118px;padding:14px 44px 14px 14px;border-radius:16px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s,border-color .12s,transform .08s;box-sizing:border-box}
+.kid:active{transform:scale(.985)}
+.av{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font:800 22px var(--font-name);color:#fff;grid-row:1/span 2;align-self:center}
+.names{min-width:0;overflow:hidden}
+.pre{display:block;font-family:var(--font-name);font-weight:700;font-size:28px;line-height:1.02;word-break:keep-all;overflow-wrap:normal}
+.nom{display:block;font-family:var(--font-name);font-weight:600;font-size:18px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);word-break:keep-all;overflow-wrap:normal;margin-top:2px}
+.flags{display:flex;flex-wrap:wrap;gap:4px;grid-column:2;min-width:0}
+.flags:empty{display:none}
+.fl{font:700 11.5px var(--font-body);letter-spacing:.03em;padding:3px 7px;border-radius:6px;background:var(--warn-soft);color:var(--warn);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.fl.med{background:var(--alert-soft);color:var(--alert)}
+.tick{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;pointer-events:none}
+.tick svg{width:16px;height:16px;opacity:0}
+.info{position:absolute;right:6px;bottom:6px;width:40px;height:40px;border-radius:10px;border:0;background:transparent;color:var(--muted);font:700 18px Georgia,serif;font-style:italic;cursor:pointer}
+.cardk.on .kid{background:var(--tatami);border-color:var(--tatami);color:var(--tatami-ink)}
+.cardk.on .nom{color:var(--tatami-ink);opacity:.85}
+.cardk.on .tick{background:var(--tatami-ink);border-color:var(--tatami-ink)}
+.cardk.on .tick svg{opacity:1;stroke:var(--tatami)}
+.cardk.on .info{color:var(--tatami-ink)}
+.cardk.on .fl{background:rgba(255,255,255,.88);color:#3A3A3A}
+.empty{grid-column:1/-1;padding:32px 16px;text-align:center;color:var(--muted);border:2px dashed var(--line);border-radius:14px;line-height:1.5}
+/* Mode tablette : toute la hauteur de l'écran est répartie entre les cartes */
+.fitbtn{display:none}
+body.fit .wrap{padding-block:6px 0;max-width:none}
+body.fit header,body.fit .notice,body.fit #filter,body.fit .seg,body.fit #addBtn,body.fit #courseSub,body.fit #fitOn{display:none}
+body.fit .fitbtn{display:inline-flex}
+body.fit .session{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;margin:4px 0 10px}
+body.fit .session>div:first-child{order:1}
+body.fit .controls{order:2;flex:1 1 auto;grid-column:auto}
+body.fit .count{order:3;font-size:34px;display:flex;align-items:baseline;gap:10px}
+body.fit .count small{display:inline;margin:0}
+body.fit .session h2{font-size:30px}
+body.fit .grid{gap:var(--gap,10px)}
+body.fit .divider{display:none}
+body.fit .kid{height:100%;min-height:0;padding:calc(var(--ch)*.08) var(--padr) calc(var(--ch)*.08) var(--padl);grid-template-columns:var(--av) minmax(0,1fr);column-gap:max(10px,calc(var(--ch)*.08));row-gap:calc(var(--ch)*.04)}
+body.fit .av{width:var(--av);height:var(--av);font-size:calc(var(--av)*.4)}
+body.fit .pre{font-size:var(--pre)}
+body.fit .nom{font-size:calc(var(--pre)*.62)}
+body.fit .fl{font-size:max(11px,calc(var(--pre)*.36))}
+body.fit .tick{width:calc(var(--ch)*.24);height:calc(var(--ch)*.24);max-width:44px;max-height:44px;top:calc(var(--ch)*.09);right:calc(var(--ch)*.09)}
+body.fit .tick svg{width:60%;height:60%}
+body.fit .grid.compact .flags{gap:5px}
+body.fit .grid.compact .fl{font-size:0;padding:0;width:11px;height:11px;border-radius:50%;background:var(--warn)}
+body.fit .grid.compact .fl.med{background:var(--alert)}
+body.fit .grid.compact .cardk.on .fl{background:#FFD9A8}body.fit .grid.compact .cardk.on .fl.med{background:#FFB3AC}
+body.fit .grid.compact .info{width:34px;height:34px;font-size:16px;right:4px;bottom:4px}
+body.fit .info{width:max(40px,calc(var(--ch)*.3));height:max(40px,calc(var(--ch)*.3));font-size:max(18px,calc(var(--ch)*.15))}
+/* Barre des cours */
+.coursebar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:10px 0 calc(12px + env(safe-area-inset-bottom,0px));z-index:5}
+.chips{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 4px}
+.chip{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:2px;font:700 21px var(--font-name);padding:8px 18px;min-height:62px;min-width:118px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;white-space:nowrap;justify-content:center}
+.chip .n{font:600 13px var(--font-body);color:var(--muted);font-variant-numeric:tabular-nums}
+.chip .td{color:var(--tatami);font-weight:700}
+.chip[aria-pressed="true"]{border-color:var(--tatami);background:var(--tatami-soft)}
+/* Élèves */
+.dir{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:18px;margin-top:16px;align-items:start}
+.search{display:flex;flex-direction:column;gap:8px}
+.results{display:flex;flex-direction:column;gap:6px;max-height:68vh;overflow:auto}
+.res{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:8px 12px;cursor:pointer;font:500 15px var(--font-body);min-height:56px}
+.res .av{width:38px;height:38px;font-size:16px;grid-row:auto}
+.res b{display:block;font-family:var(--font-name);font-size:20px;font-weight:700;line-height:1.05}
+.res .c{font-size:12.5px;color:var(--muted)}
+.res[aria-current="true"]{border-color:var(--tatami);background:var(--tatami-soft)}
+.fiche{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}
+.fh{display:flex;gap:16px;align-items:center}
+.fh .av{width:72px;height:72px;font-size:28px;grid-row:auto}
+.fh h3{margin:0;font-family:var(--font-name);font-size:38px;line-height:1;font-weight:800}
+.fh h3 small{display:block;font-size:21px;font-weight:600;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-top:4px}
+.alertbox{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--alert-soft);color:var(--ink);white-space:pre-line;line-height:1.45}
+.alertbox b{color:var(--alert);display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.fields{display:grid;grid-template-columns:minmax(120px,auto) minmax(0,1fr);margin:14px 0 0;border-top:1px solid var(--line)}
+.fields dt,.fields dd{margin:0;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.fields dt{color:var(--muted);padding-right:12px}
+.fields dd{word-break:break-word;white-space:pre-line}
+.sect{margin:22px 0 8px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.crs{margin-top:12px}
+.crs h4{margin:0 0 6px;font-family:var(--font-name);font-size:22px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.crs h4 span{font-variant-numeric:tabular-nums;color:var(--tatami)}
+.hist{display:flex;flex-wrap:wrap;gap:5px}
+.h{font-size:13px;font-variant-numeric:tabular-nums;padding:5px 8px;border-radius:7px;border:1px solid var(--line);color:var(--muted)}
+.h.p{background:var(--tatami);border-color:var(--tatami);color:var(--tatami-ink)}
+/* Fenêtres */
+.overlay{position:fixed;inset:0;background:rgba(8,12,9,.55);display:grid;place-items:center;padding:16px;z-index:20}
+.modal{background:var(--surface);color:var(--ink);border-radius:18px;padding:20px;width:min(640px,100%);max-height:calc(100% - 32px);overflow:auto;box-sizing:border-box;position:relative}
+.modal h3.t{margin:0 0 14px;font-family:var(--font-name);font-size:28px}
+.close{position:absolute;top:10px;right:10px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:var(--muted);min-width:0}
+.form .full{grid-column:1/-1}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}
+.sync{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;max-width:260px;line-height:1.3}
+.sync::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--muted);flex:0 0 auto}
+.sync.ok::before{background:var(--tatami)}.sync.off::before{background:var(--warn)}
+#save{font-size:17px;padding-inline:20px}
+.gate{position:fixed;inset:0;z-index:40;background:var(--bg);overflow:auto;padding:24px 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.gate .box{max-width:620px;margin:6vh auto 0;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px}
+.gate small.k{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.gate h2{margin:0 0 6px;font-family:var(--font-name);font-weight:800;font-size:34px;line-height:1.05}
+.gate p{line-height:1.5;margin:8px 0}
+.gate .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.gate .row input{flex:1 1 240px;width:auto}
+.gate code{display:block;margin-top:6px;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line);font:500 14px ui-monospace,Menlo,Consolas,monospace;word-break:break-all;user-select:all}
+.gate .files{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.gate .files button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:10px 14px;cursor:pointer;min-height:56px;font:600 16px var(--font-body)}
+.gate .files button span{font-weight:500;font-size:13px;color:var(--muted)}
+.gate .alt{margin-top:18px;font-size:14px}
+.gate .alt button{background:none;border:0;color:var(--tatami);font:600 14px var(--font-body);cursor:pointer;padding:6px 0;text-decoration:underline}
+.err{color:var(--alert);font-size:14px;margin-top:8px;line-height:1.4}
+.setgrid{display:grid;grid-template-columns:minmax(110px,auto) minmax(0,1fr);border-top:1px solid var(--line);margin:4px 0 12px}
+.setgrid dt,.setgrid dd{margin:0;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.setgrid dt{color:var(--muted);padding-right:12px}.setgrid dd{word-break:break-word}
+.setbtns{display:flex;flex-wrap:wrap;gap:8px}
+.toast{position:fixed;left:50%;bottom:calc(120px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;z-index:30;max-width:calc(100% - 32px);box-sizing:border-box;line-height:1.35}
+@media (max-width:760px){.dir{grid-template-columns:1fr}.results{max-height:40vh}.session{grid-template-columns:1fr}.count{text-align:left}}
+@media (max-width:460px){.grid{grid-template-columns:1fr}.form{grid-template-columns:1fr}.pre{font-size:25px}}
+@media (prefers-reduced-motion:reduce){.kid{transition:none}.kid:active{transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div><small>USNCD Judo · Saison 2026-2027</small><h1>Appel du dojo</h1></div>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" id="tabAppel" aria-selected="true">Appel</button>
+        <button class="tab" role="tab" id="tabEleves" aria-selected="false">Élèves</button>
+      </div>
+    </div>
+    <div class="tools">
+      <span class="sync" id="sync"></span>
+      <button class="btn" id="setBtn">Réglages</button>
+    </div>
+  </header>
+  <div class="notice" id="notice" hidden></div>
+
+  <section id="viewAppel">
+    <div class="session">
+      <div><h2 id="courseTitle">—</h2><div class="sub" id="courseSub"></div></div>
+      <div class="count" id="count"></div>
+      <div class="controls">
+        <select id="seance" aria-label="Séance"></select>
+        <input type="search" id="filter" placeholder="Trouver un élève…" aria-label="Trouver un élève dans ce cours" autocomplete="off">
+        <div class="seg" role="group" aria-label="Ordre d'affichage">
+          <button id="sortPre" aria-pressed="true">Prénom A→Z</button>
+          <button id="sortFile" aria-pressed="false">Ordre de la feuille</button>
+        </div>
+        <button class="btn" id="addBtn">+ Nouvel élève</button>
+        <button class="btn" id="fitOn">Mode tablette</button>
+        <button class="btn fitbtn" id="fitOff">Quitter le mode tablette</button>
+        <button class="btn primary" id="save">Valider l'appel</button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="viewEleves" hidden>
+    <div class="dir">
+      <div class="search">
+        <input type="search" id="q" placeholder="Nom, prénom, téléphone, commentaire…" aria-label="Rechercher un élève" autocomplete="off">
+        <select id="qCourse" aria-label="Filtrer par cours"></select>
+        <button class="btn" id="addBtn2">+ Nouvel élève</button>
+        <div class="sub" id="qCount"></div>
+        <div class="results" id="results"></div>
+      </div>
+      <div id="fichePane"></div>
+    </div>
+  </section>
+</div>
+
+<nav class="coursebar" id="coursebar" aria-label="Choix du cours"><div class="chips" id="chips"></div></nav>
+
+<div class="overlay" id="infoDlg" hidden><div class="modal" role="dialog" aria-modal="true" aria-label="Fiche élève"><button class="btn close" id="infoClose">Fermer</button><div id="infoBody"></div></div></div>
+
+<div class="overlay" id="addDlg" hidden>
+  <form class="modal" id="addForm" novalidate>
+    <h3 class="t">Nouvel élève</h3>
+    <div class="form">
+      <label class="full">Cours<select id="aCours"></select></label>
+      <label>NOMS<input id="aNom" autocomplete="off"></label>
+      <label>PRÉNOMS<input id="aPre" autocomplete="off"></label>
+      <label>N° TEL<input id="aTel" inputmode="tel" autocomplete="off"></label>
+      <label>Photos<select id="aPhotos"><option value="">(vide)</option><option>NON</option><option>OUI</option></select></label>
+      <label>Licence<select id="aLic"><option value="">(vide)</option><option>NON</option><option>OUI</option></select></label>
+      <label class="full">Médical / Commentaires<textarea id="aMed"></textarea></label>
+    </div>
+    <div class="sub" id="addWhere" style="margin-top:10px"></div>
+    <div class="sub" id="addErr" style="color:var(--alert);margin-top:6px"></div>
+    <div class="actions"><button type="button" class="btn" id="addCancel">Annuler</button><button type="submit" class="btn primary">Ajouter l'élève</button></div>
+  </form>
+</div>
+<div class="overlay" id="askDlg" hidden><div class="modal" role="dialog" aria-modal="true"><h3 class="t" id="askT"></h3><p id="askP" style="line-height:1.5;margin:0"></p><div class="actions"><button class="btn" id="askNo">Annuler</button><button class="btn primary" id="askYes"></button></div></div></div>
+<section class="gate" id="gate" hidden>
+  <div class="box" id="gStepId" hidden>
+    <small class="k">Première installation · 1 sur 3</small>
+    <h2>Relier la page à Microsoft</h2>
+    <p>Colle l'<b>ID d'application (client)</b> obtenu lors de l'inscription de la page sur le portail Microsoft.</p>
+    <div class="row"><input id="gClient" placeholder="ex. 1a2b3c4d-…" autocomplete="off" spellcheck="false" aria-label="ID d'application (client)"><button class="btn primary" id="gClientOk">Continuer</button></div>
+    <p class="sub" style="margin-top:14px">Adresse de redirection à déclarer (type « Application monopage ») :</p>
+    <code id="gRedirect"></code>
+    <div class="err" id="gClientErr"></div>
+  </div>
+  <div class="box" id="gStepLogin" hidden>
+    <small class="k">Première installation · 2 sur 3</small>
+    <h2>Connexion à OneDrive</h2>
+    <p>Connecte-toi avec le compte Microsoft qui contient le fichier des appels. La tablette restera connectée.</p>
+    <div class="row"><button class="btn primary" id="gLogin">Se connecter avec Microsoft</button></div>
+    <div class="err" id="gLoginErr"></div>
+  </div>
+  <div class="box" id="gStepFile" hidden>
+    <small class="k">Première installation · 3 sur 3</small>
+    <h2>Choisir le fichier des appels</h2>
+    <p>Recherche le fichier Excel dans ton OneDrive. La page le lira et le mettra à jour à chaque validation d'appel.</p>
+    <div class="row"><input type="search" id="gQ" value="Appel" aria-label="Nom du fichier"><button class="btn primary" id="gSearch">Rechercher</button></div>
+    <div class="files" id="gFiles"></div>
+    <div class="err" id="gFileErr"></div>
+  </div>
+  <div class="box alt" style="background:transparent;border:0;padding:0 24px">
+    <button id="gDemo">Essayer avec des élèves fictifs</button>
+    <button id="gBack" hidden>Revenir à l'appel</button>
+  </div>
+</section>
+
+<div class="overlay" id="setDlg" hidden><div class="modal" role="dialog" aria-modal="true" aria-label="Réglages">
+  <button class="btn close" id="setClose">Fermer</button>
+  <h3 class="t">Réglages</h3>
+  <dl class="setgrid" id="setInfo"></dl>
+  <div class="setbtns">
+    <button class="btn primary" id="setSync">Synchroniser maintenant</button>
+    <button class="btn" id="setFile">Changer de fichier</button>
+    <button class="btn" id="setCopy">Télécharger une copie</button>
+    <button class="btn" id="setOut">Se déconnecter</button>
+    <button class="btn" id="setId">Changer l'ID d'application</button>
+  </div>
+  <div class="err" id="setErr"></div>
+</div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="jszip.min.js"></script>
+<script src="msal-browser.min.js"></script>
+<script id="core">
+/* Lecture et écriture « chirurgicale » du classeur : seules les cellules touchées changent. */
+var AppelCore=(function(){
+  var ENT={"&amp;":"&","&lt;":"<","&gt;":">","&quot;":'"',"&apos;":"'"};
+  function unesc(s){return String(s).replace(/&(amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);/g,function(m){if(ENT[m])return ENT[m];var h=m[2]==="x"||m[2]==="X";return String.fromCodePoint(parseInt(m.slice(h?3:2,-1),h?16:10))})}
+  function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+  function colNum(c){var n=0;for(var i=0;i<c.length;i++)n=n*26+c.charCodeAt(i)-64;return n}
+  function norm(s){return String(s==null?"":s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/\s+/g," ").trim()}
+  function serialToISO(n){return new Date(Date.UTC(1899,11,30)+Math.round(n)*864e5).toISOString().slice(0,10)}
+  var CELL_RE=/<c r="([A-Z]+)(\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+
+  function parseShared(xml){var out=[];if(!xml)return out;var re=/<si>([\s\S]*?)<\/si>/g,m;
+    while((m=re.exec(xml))){var b=m[1].replace(/<rPh[\s\S]*?<\/rPh>/g,""),t="",r=/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g,k;while((k=r.exec(b)))t+=k[1];out.push(unesc(t))}return out}
+
+  function parseCells(xml,ss){var cells={},m;CELL_RE.lastIndex=0;
+    while((m=CELL_RE.exec(xml))){var col=m[1],r=+m[2],at=m[3],inner=m[4]||"";
+      var t=(/\st="([^"]*)"/.exec(at)||[])[1]||"n",s=(/\ss="(\d+)"/.exec(at)||[])[1]||null;
+      var vm=/<v>([\s\S]*?)<\/v>/.exec(inner),v=vm?unesc(vm[1]):null,f=null;
+      if(/<f[\s>\/]/.test(inner)){var fm=/<f[^>]*>([\s\S]*?)<\/f>/.exec(inner);f=fm?unesc(fm[1]):"(partagée)"}
+      var val=null;
+      if(t==="s"&&v!=null)val=ss[+v];
+      else if(t==="inlineStr"){var tx="",rr=/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g,k;while((k=rr.exec(inner)))tx+=unesc(k[1]);val=tx}
+      else if(t==="b")val=v==="1";
+      else if(t==="str"||t==="e")val=v;
+      else if(v!=null)val=Number(v);
+      (cells[r]=cells[r]||{})[col]={t:t,s:s,val:val,f:f};
+    }return cells}
+
+  function txt(cells,r,c){var x=cells[r]&&cells[r][c];if(!x||x.val==null||typeof x.val==="boolean")return "";return String(x.val).trim()}
+  function isOn(x){return !!x&&(x.val===true||(typeof x.val==="string"&&/^x$/i.test(x.val.trim())))}
+
+  function sheetModel(name,path,xml,ss){
+    var cells=parseCells(xml,ss),rows=Object.keys(cells).map(Number).sort(function(a,b){return a-b});
+    var hr=null;
+    for(var i=0;i<rows.length&&i<20;i++){var rc=cells[rows[i]];for(var c in rc){if(/^noms?$/.test(norm(txt(cells,rows[i],c)))){hr=rows[i];break}}if(hr)break}
+    if(hr==null)return null;
+    var col={},headers=[],dates=[];
+    Object.keys(cells[hr]).sort(function(a,b){return colNum(a)-colNum(b)}).forEach(function(c){
+      var x=cells[hr][c];
+      if(typeof x.val==="number"&&x.val>40000&&x.val<60000){dates.push({col:c,iso:serialToISO(x.val)});return}
+      var h=txt(cells,hr,c),n=norm(h);if(!h)return;
+      headers.push({col:c,label:h.replace(/\s*\n\s*/g," ")});
+      if(/^noms?$/.test(n))col.nom=c;else if(/^prenoms?$/.test(n))col.pre=c;else if(/tel/.test(n))col.tel=c;
+      else if(/photo/.test(n))col.photos=c;else if(/medical|comment/.test(n))col.med=c;else if(/licence/.test(n))col.lic=c;
+    });
+    var seen={};dates.forEach(function(d){seen[d.iso]=(seen[d.iso]||0)+1;d.dup=seen[d.iso]>1?seen[d.iso]:0});
+    var totalRow=null,rStart=hr+1,rEnd=null;
+    for(var j=0;j<rows.length;j++){var r=rows[j];if(r<=hr)continue;var rc2=cells[r];
+      for(var c2 in rc2){var f=rc2[c2].f;if(f&&/COUNTIF/i.test(f)){totalRow=r;var mm=/COUNTIF\(\$?[A-Z]+\$?(\d+):\$?[A-Z]+\$?(\d+)/i.exec(f);if(mm){rStart=+mm[1];rEnd=+mm[2]}break}}
+      if(totalRow)break}
+    if(rEnd==null)rEnd=totalRow?totalRow-1:(rows[rows.length-1]||hr);
+    var title=txt(cells,rows[0],"A")||name;
+    var students=[],empties=[],section="",lastUsed=hr;
+    rows.forEach(function(r){
+      if(r<=hr||r===totalRow)return;
+      var nom=col.nom?txt(cells,r,col.nom):"",pre=col.pre?txt(cells,r,col.pre):"";
+      var tel=col.tel?txt(cells,r,col.tel):"",med=col.med?txt(cells,r,col.med):"",lic=col.lic?txt(cells,r,col.lic):"",ph=col.photos?txt(cells,r,col.photos):"";
+      if(!nom&&!pre){if(r>=rStart&&r<=rEnd)empties.push(r);return}
+      if(r<=rEnd)lastUsed=r;
+      if(nom&&!pre&&!tel&&!med&&!lic&&!ph&&nom===nom.toUpperCase()&&/\s/.test(nom)){section=nom;return}
+      var extra=[];headers.forEach(function(h){if([col.nom,col.pre,col.tel,col.photos,col.med,col.lic].indexOf(h.col)<0){var v=txt(cells,r,h.col);if(v)extra.push({label:h.label,v:v})}});
+      students.push({id:name+"!"+r,sheet:name,r:r,num:txt(cells,r,"A"),nom:nom,pre:pre,tel:tel,photos:ph,med:med,lic:lic,section:section,after:!!totalRow&&r>totalRow,extra:extra});
+    });
+    return {name:name,path:path,title:title,headerRow:hr,col:col,headers:headers,dates:dates,totalRow:totalRow,rStart:rStart,rEnd:rEnd,
+      cells:cells,students:students,freeRows:empties.filter(function(r){return r>lastUsed})};
+  }
+
+  function present(m,col,r){return isOn(m.cells[r]&&m.cells[r][col])}
+  function dayTotal(m,col){var n=0;for(var r=m.rStart;r<=m.rEnd;r++){var x=m.cells[r]&&m.cells[r][col];if(x&&x.val===true)n++}return n}
+
+  /* --- écriture --- */
+  function styleAbove(xml,col,r,floor){for(var k=r-1;k>floor;k--){var mm=new RegExp('<c r="'+col+k+'"[^>]*?\\ss="(\\d+)"').exec(xml);if(mm)return mm[1]}return null}
+  function setCell(xml,ref,p,floor){
+    var m=/^([A-Z]+)(\d+)$/.exec(ref),col=m[1],r=+m[2];
+    var body=p.t==="b"?' t="b"><v>'+(p.v?1:0)+'</v></c>':' t="inlineStr"><is><t xml:space="preserve">'+esc(p.v)+'</t></is></c>';
+    var re=new RegExp('<c r="'+ref+'"([^>]*?)(?:/>|>[\\s\\S]*?</c>)'),cm=re.exec(xml);
+    if(cm){var at=cm[1].replace(/\st="[^"]*"/,"").replace(/\s+$/,"");return xml.slice(0,cm.index)+'<c r="'+ref+'"'+at+body+xml.slice(cm.index+cm[0].length)}
+    var s=styleAbove(xml,col,r,floor||0),nc='<c r="'+ref+'"'+(s?' s="'+s+'"':"")+body;
+    var rre=new RegExp('<row r="'+r+'"([^>]*?)(/>|>([\\s\\S]*?)</row>)'),rm=rre.exec(xml);
+    if(rm){
+      if(rm[2]==="/>"){var ra=rm[1].replace(/\s+$/,"");return xml.slice(0,rm.index)+'<row r="'+r+'"'+ra+'>'+nc+'</row>'+xml.slice(rm.index+rm[0].length)}
+      var inner=rm[3],innerStart=rm.index+rm[0].indexOf(">")+1,pos=inner.length,k2,cr=/<c r="([A-Z]+)\d+"/g;
+      while((k2=cr.exec(inner))){if(colNum(k2[1])>colNum(col)){pos=k2.index;break}}
+      return xml.slice(0,innerStart+pos)+nc+xml.slice(innerStart+pos);
+    }
+    var rr=/<row r="(\d+)"/g,k3,at2=-1;while((k3=rr.exec(xml))){if(+k3[1]>r){at2=k3.index;break}}
+    if(at2<0)at2=xml.indexOf("</sheetData>");
+    return xml.slice(0,at2)+'<row r="'+r+'">'+nc+'</row>'+xml.slice(at2);
+  }
+  function setCached(xml,ref,n){
+    var re=new RegExp('<c r="'+ref+'"([^>]*?)>([\\s\\S]*?)</c>'),m=re.exec(xml);if(!m||!/<f[\s>\/]/.test(m[2]))return xml;
+    var inner=/<v>[\s\S]*?<\/v>/.test(m[2])?m[2].replace(/<v>[\s\S]*?<\/v>/,"<v>"+n+"</v>"):m[2]+"<v>"+n+"</v>";
+    return xml.slice(0,m.index)+'<c r="'+ref+'"'+m[1]+'>'+inner+'</c>'+xml.slice(m.index+m[0].length);
+  }
+  /* patches = {ref:{t:'b'|'s',v}} → nouveau XML + totaux recalculés pour les colonnes touchées */
+  function applyPatches(xml,patches,ss,name,path){
+    var base=sheetModel(name,path,xml,ss),floor=base?base.headerRow:0,cols={};
+    Object.keys(patches).forEach(function(ref){xml=setCell(xml,ref,patches[ref],floor);if(patches[ref].t==="b")cols[/^[A-Z]+/.exec(ref)[0]]=1});
+    var m=sheetModel(name,path,xml,ss);
+    if(m&&m.totalRow)Object.keys(cols).forEach(function(c){xml=setCached(xml,c+m.totalRow,dayTotal(m,c))});
+    return xml;
+  }
+  function listSheets(wbXml,relsXml){
+    var rel={},m,re=/<Relationship\s[^>]*>/g;
+    while((m=re.exec(relsXml))){var id=(/\sId="([^"]*)"/.exec(m[0])||[])[1],tg=(/\sTarget="([^"]*)"/.exec(m[0])||[])[1];if(id)rel[id]=tg}
+    var out=[],sr=/<sheet\s[^>]*>/g;
+    while((m=sr.exec(wbXml))){var nm=(/\sname="([^"]*)"/.exec(m[0])||[])[1],rid=(/\sr:id="([^"]*)"/.exec(m[0])||[])[1],st=(/\sstate="([^"]*)"/.exec(m[0])||[])[1];
+      if(!nm||!rel[rid]||st==="hidden"||st==="veryHidden")continue;var t=rel[rid];out.push({name:unesc(nm),path:t.charAt(0)==="/"?t.slice(1):"xl/"+t.replace(/^\.\//,"")})}
+    return out;
+  }
+  function keyOf(st){return norm(st.nom)+"|"+norm(st.pre)}
+  /* Ré-applique les modifications en attente sur une version plus récente du fichier :
+     les coches suivent l'élève (nom|prénom) et la date, même si des lignes ou colonnes ont bougé. */
+  function rebase(xml,p,ss,name,path){
+    var m=sheetModel(name,path,xml,ss),out={},dropped=[],free,used={};
+    if(!m)return {patches:{},dropped:Object.keys(p).map(function(r){return name+"!"+r})};
+    free=m.freeRows.slice();
+    var groups={};
+    Object.keys(p).forEach(function(ref){var x=p[ref];if(x.t!=="s")return;var mm=/^([A-Z]+)(\d+)$/.exec(ref),g=x.g||+mm[2];(groups[g]=groups[g]||[]).push({col:mm[1],r:+mm[2],x:x})});
+    Object.keys(groups).forEach(function(g){
+      var it=groups[g],r=it[0].r,vals={};it.forEach(function(i){vals[i.col]=String(i.x.v)});
+      var k=norm(m.col.nom?vals[m.col.nom]||"":"")+"|"+norm(m.col.pre?vals[m.col.pre]||"":"");
+      if(m.students.some(function(s){return keyOf(s)===k}))return; /* déjà présent dans le fichier */
+      var target=free.indexOf(r)>=0&&!used[r]?r:free.find(function(f){return !used[f]});
+      if(target==null){dropped.push(name+" : nouvel élève "+k.replace("|"," "));return}
+      used[target]=1;
+      it.forEach(function(i){out[i.col+target]={t:"s",v:i.x.v,g:target}});
+    });
+    var m1=Object.keys(out).length?sheetModel(name,path,applyPatches(xml,out,ss,name,path),ss):m;
+    Object.keys(p).forEach(function(ref){var x=p[ref];if(x.t!=="b")return;
+      var mm=/^([A-Z]+)(\d+)$/.exec(ref),col=mm[1],r=+mm[2];
+      if(x.iso){var d=m1.dates.find(function(d){return d.iso===x.iso&&(d.dup||0)===(x.dup||0)});if(!d){dropped.push(name+" "+x.iso);return}col=d.col}
+      if(x.key){var c=m1.students.filter(function(s){return keyOf(s)===x.key});if(!c.length){dropped.push(name+" : "+x.key.replace("|"," "));return}
+        r=(c.find(function(s){return s.r===r})||c[0]).r}
+      if(present(m1,col,r)===x.v)return;
+      out[col+r]={t:"b",v:x.v,key:x.key,iso:x.iso,dup:x.dup||0};
+    });
+    return {patches:out,dropped:dropped};
+  }
+  return {parseShared:parseShared,sheetModel:sheetModel,applyPatches:applyPatches,listSheets:listSheets,present:present,dayTotal:dayTotal,norm:norm,esc:esc,rebase:rebase,keyOf:keyOf};
+})();
+if(typeof module!=="undefined")module.exports=AppelCore;
+</script>
+<script>
+(function(){
+var C=AppelCore,$=function(id){return document.getElementById(id)};
+var LS={base:"od.base",name:"od.name",patch:"od.patch",prefs:"od.prefs",client:"od.client",item:"od.item",etag:"od.etag",synced:"od.synced",pending:"od.pending",resume:"od.resume"};
+var store={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}},del:function(k){try{localStorage.removeItem(k)}catch(e){}}};
+var esc=C.esc,norm=C.norm;
+
+var book=null; // {zip, ss, sheets:[{name,path,xml}], fileName, demo}
+var models=[],course=null,seanceBy={},patches={},prefs={sort:"pre"},picked=null;
+try{patches=JSON.parse(store.get(LS.patch)||"{}")||{}}catch(e){patches={}}
+try{prefs=Object.assign(prefs,JSON.parse(store.get(LS.prefs)||"{}"))}catch(e){}
+
+function todayISO(){var d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+var TODAY=todayISO();
+function dLabel(iso,long){var d=new Date(iso+"T12:00:00");return d.toLocaleDateString("fr-FR",long?{weekday:"long",day:"numeric",month:"long"}:{weekday:"short",day:"2-digit",month:"2-digit"})}
+function sentence(s){s=String(s).toLowerCase();return s.charAt(0).toUpperCase()+s.slice(1)}
+function title(s){return String(s).toLowerCase().replace(/(^|[\s\-'’])(\p{L})/gu,function(m,a,b){return a+b.toUpperCase()})}
+function phone(t){var d=String(t).replace(/\D/g,"");if(d.length===9)d="0"+d;return d.length===10?d.replace(/(\d\d)(?=\d)/g,"$1 "):t}
+function hue(s){var h=0;s=norm(s);for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%360;return h}
+function avatar(st){var a=(st.pre||st.nom||"?").trim(),b=(st.pre?st.nom:"").trim();return '<span class="av" style="background:hsl('+hue(st.pre+st.nom)+' 42% 40%)">'+esc((a[0]||"?")+(b[0]||"")).toUpperCase()+'</span>'}
+var countPatches=function(){var n=0;for(var s in patches)n+=Object.keys(patches[s]).length;return n};
+function savePatches(){store.set(LS.patch,JSON.stringify(patches));updateSaveBtn()}
+
+/* ---------- Chargement ---------- */
+function buildModels(){
+  models=book.sheets.map(function(sh){var p=patches[sh.name]||{},xml=Object.keys(p).length?C.applyPatches(sh.xml,p,book.ss,sh.name,sh.path):sh.xml;return C.sheetModel(sh.name,sh.path,xml,book.ss)}).filter(Boolean);
+}
+function rebuildSheet(name){var sh=book.sheets.find(function(s){return s.name===name});var p=patches[name]||{};
+  var m=C.sheetModel(sh.name,sh.path,Object.keys(p).length?C.applyPatches(sh.xml,p,book.ss,sh.name,sh.path):sh.xml,book.ss);
+  models=models.map(function(x){return x.name===name?m:x})}
+async function parseBook(bytes,fileName,demo){
+  var zip=await JSZip.loadAsync(bytes);
+  var wbx=await zip.file("xl/workbook.xml").async("string"),rels=await zip.file("xl/_rels/workbook.xml.rels").async("string");
+  var ssf=zip.file("xl/sharedStrings.xml"),ss=C.parseShared(ssf?await ssf.async("string"):"");
+  var list=C.listSheets(wbx,rels),sheets=[];
+  for(var i=0;i<list.length;i++){var f=zip.file(list[i].path);if(f)sheets.push({name:list[i].name,path:list[i].path,xml:await f.async("string")})}
+  if(!sheets.length)throw new Error("noSheets");
+  return {zip:zip,ss:ss,sheets:sheets,fileName:fileName,demo:!!demo};
+}
+function useBook(b){
+  book=b;origCache={};buildModels();
+  if(!models.length)throw new Error("noSheets");
+  if(!models.some(function(m){return m.name===course}))course=(models.find(function(m){return m.dates.some(function(d){return d.iso===TODAY})})||models[0]).name;
+  renderAll();
+}
+async function openBytes(bytes,fileName,demo){useBook(await parseBook(bytes,fileName,demo))}
+function b64(buf){var s="",u=new Uint8Array(buf);for(var i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)}
+function unb64(s){var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+
+/* ---------- Séance ---------- */
+function curModel(){return models.find(function(m){return m.name===course})}
+function seanceIdx(m){
+  if(seanceBy[m.name]!=null&&m.dates[seanceBy[m.name]])return seanceBy[m.name];
+  var i=m.dates.findIndex(function(d){return d.iso===TODAY});if(i>=0)return i;
+  var best=-1;m.dates.forEach(function(d,k){if(d.iso<=TODAY&&(best<0||d.iso>=m.dates[best].iso))best=k});
+  return best>=0?best:0;
+}
+
+/* ---------- Vue Appel ---------- */
+var ICON='<svg viewBox="0 0 16 16" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+function flags(st,m){var f=[];
+  if(st.med)f.push('<span class="fl med" title="Santé / note">Santé / note</span>');
+  if(/^non$/i.test(st.photos))f.push('<span class="fl" title="Pas de photo">Pas de photo</span>');
+  if(/^non$/i.test(st.lic))f.push('<span class="fl" title="Licence : non">Licence : non</span>');
+  if(st.section)f.push('<span class="fl">'+esc(sentence(st.section))+'</span>');
+  if(st.after)f.push('<span class="fl">Hors total</span>');
+  return f.join("")}
+function renderAll(){
+  $("notice").hidden=!book||!book.demo;
+  if(book&&book.demo)$("notice").innerHTML="<b>Exemple.</b> Ces élèves sont fictifs et rien n'est envoyé sur OneDrive. Ouvre « Réglages » pour relier ton vrai fichier.";
+  renderChips();renderAppel();renderEleves();updateSaveBtn();
+}
+function renderChips(){
+  var box=$("chips");box.innerHTML="";
+  models.forEach(function(m){
+    var b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("aria-pressed",m.name===course);
+    var hasToday=m.dates.some(function(d){return d.iso===TODAY}),d=m.dates[seanceIdx(m)];
+    var p=d?m.students.filter(function(s){return C.present(m,d.col,s.r)}).length:0;
+    b.innerHTML='<span></span><span class="n">'+(hasToday?'<span class="td">Aujourd\'hui · </span>':"")+p+' / '+m.students.length+'</span>';
+    b.firstChild.textContent=m.name;
+    b.onclick=function(){course=m.name;$("filter").value="";renderChips();renderAppel();window.scrollTo({top:0})};
+    box.appendChild(b);
+  });
+}
+function renderAppel(){
+  var m=curModel(),grid=$("grid");grid.innerHTML="";
+  if(!m){$("courseTitle").textContent="—";$("count").textContent="";return}
+  $("courseTitle").textContent=m.name;
+  $("courseSub").textContent=m.title.replace(/^cours\s*:\s*/i,"")+(book.demo?"":" · "+book.fileName);
+  var sel=$("seance"),idx=seanceIdx(m);sel.innerHTML="";
+  m.dates.forEach(function(d,k){var o=document.createElement("option");o.value=k;o.textContent=dLabel(d.iso)+(d.iso===TODAY?" (aujourd'hui)":"")+(d.dup?" · doublon "+d.dup:"");sel.appendChild(o)});
+  sel.value=idx;sel.onchange=function(){seanceBy[m.name]=+sel.value;renderAppel();renderChips()};
+  var d=m.dates[idx];
+  if(!d){grid.innerHTML='<div class="empty">Aucune colonne de date dans cette feuille.</div>';$("count").textContent="";return}
+  var q=norm($("filter").value),list=m.students.slice();
+  if(prefs.sort==="pre")list.sort(function(a,b){return (a.pre||a.nom).localeCompare(b.pre||b.nom,"fr",{sensitivity:"base"})||a.nom.localeCompare(b.nom,"fr")});
+  if(q)list=list.filter(function(s){return norm(s.pre+" "+s.nom+" "+s.nom+" "+s.pre).indexOf(q)>=0});
+  var lastSec=null;
+  list.forEach(function(st){
+    if(prefs.sort==="file"&&!q){var sec=st.after?"Sous la ligne de total (non comptés)":st.section;if(sec!==lastSec){lastSec=sec;if(sec){var dv=document.createElement("div");dv.className="divider";dv.textContent=sentence(sec);grid.appendChild(dv)}}}
+    var on=C.present(m,d.col,st.r),card=document.createElement("div");card.className="cardk"+(on?" on":"");
+    card.innerHTML='<button type="button" class="kid" aria-pressed="'+on+'">'+avatar(st)+'<span class="names"><span class="pre"></span><span class="nom"></span></span><span class="flags">'+(prefs.sort==="file"&&!q?flags(Object.assign({},st,{section:""}),m):flags(st,m))+'</span><span class="tick">'+ICON+'</span></button><button type="button" class="info" aria-label="Voir la fiche">i</button>';
+    card.querySelector(".pre").textContent=st.pre?title(st.pre):st.nom;
+    card.querySelector(".nom").textContent=st.pre?st.nom:"";
+    card.querySelector(".kid").onclick=function(){toggle(m,d,st,card)};
+    card.querySelector(".info").onclick=function(){openInfo(st)};
+    grid.appendChild(card);
+  });
+  if(!list.length)grid.innerHTML='<div class="empty">'+(q?"Aucun élève ne correspond à « "+esc($("filter").value)+" ».":"Aucun élève dans ce cours.")+'</div>';
+  fitGrid();shrinkNames();
+  updateCount();
+}
+function shrinkNames(){
+  [].forEach.call($("grid").querySelectorAll(".pre,.nom"),function(el){
+    el.style.fontSize="";var fs=parseFloat(getComputedStyle(el).fontSize),i=0;
+    while(el.scrollWidth>el.clientWidth+1&&i<14){fs*=.92;el.style.fontSize=fs+"px";i++}
+  });
+}
+function updateCount(){
+  var m=curModel();if(!m)return;var d=m.dates[seanceIdx(m)];if(!d)return;
+  var p=m.students.filter(function(s){return C.present(m,d.col,s.r)}).length;
+  $("count").innerHTML='<span>'+p+'</span> / '+m.students.length+'<small>présents · total Excel du jour : '+C.dayTotal(m,d.col)+'</small>';
+}
+function toggle(m,d,st,card){
+  var ref=d.col+st.r,now=!C.present(m,d.col,st.r);
+  m.cells[st.r]=m.cells[st.r]||{};var old=m.cells[st.r][d.col]||{};
+  m.cells[st.r][d.col]={t:"b",s:old.s,val:now,f:null};
+  if(!book.demo){var p=patches[m.name]=patches[m.name]||{},orig=origVal(m.name,ref);
+    if(orig===now)delete p[ref];else p[ref]={t:"b",v:now,key:C.keyOf(st),iso:d.iso,dup:d.dup||0};savePatches()}
+  card.classList.toggle("on",now);card.querySelector(".kid").setAttribute("aria-pressed",now);
+  updateCount();renderChipsCount();keepAwake();
+}
+var origCache={};
+function origVal(name,ref){var key=name;if(!origCache[key]){var sh=book.sheets.find(function(s){return s.name===name});origCache[key]=C.sheetModel(sh.name,sh.path,sh.xml,book.ss)}
+  var mm=/^([A-Z]+)(\d+)$/.exec(ref);return C.present(origCache[key],mm[1],+mm[2])}
+function renderChipsCount(){var m=curModel(),btn=[].slice.call($("chips").children).find(function(b){return b.getAttribute("aria-pressed")==="true"});if(!btn||!m)return;
+  var d=m.dates[seanceIdx(m)],p=m.students.filter(function(s){return C.present(m,d.col,s.r)}).length,hasToday=m.dates.some(function(x){return x.iso===TODAY});
+  btn.querySelector(".n").innerHTML=(hasToday?'<span class="td">Aujourd\'hui · </span>':"")+p+" / "+m.students.length}
+$("filter").oninput=renderAppel;
+function setSort(s){prefs.sort=s;store.set(LS.prefs,JSON.stringify(prefs));$("sortPre").setAttribute("aria-pressed",s==="pre");$("sortFile").setAttribute("aria-pressed",s==="file");renderAppel()}
+$("sortPre").onclick=function(){setSort("pre")};$("sortFile").onclick=function(){setSort("file")};
+setSort(prefs.sort);
+
+/* ---------- Mode tablette ---------- */
+function fitGrid(){
+  var g=$("grid");
+  if(!prefs.fit){g.classList.remove("compact");g.style.gridTemplateColumns="";g.style.gridAutoRows="";["--ch","--av","--pre","--gap","--padl","--padr"].forEach(function(k){g.style.removeProperty(k)});return}
+  var n=g.querySelectorAll(".cardk").length;if(!n)return;
+  var gap=n>30?8:12,W=g.clientWidth,H=window.innerHeight-g.getBoundingClientRect().top-$("coursebar").offsetHeight-12;
+  var best=null;
+  for(var cols=1;cols<=n;cols++){
+    var rows=Math.ceil(n/cols),cw=(W-gap*(cols-1))/cols,ch=(H-gap*(rows-1))/rows;
+    if(cw<185&&cols>1)break;
+    var h=Math.min(ch,cw/1.55),score=(ch>=72?1e6:0)+h;
+    if(!best||score>best.score)best={cols:cols,ch:Math.max(72,Math.min(ch,cw/1.1)),cw:cw,score:score};
+  }
+  if(!best)best={cols:1,ch:90,cw:W};
+  var ch=best.ch,av=Math.max(36,Math.min(ch*.42,best.cw*.2,110)),padl=Math.max(12,Math.min(ch*.09,22)),padr=Math.max(44,Math.min(ch*.2,64));
+  var textW=best.cw-av-padl-padr-Math.max(10,ch*.08)-4;
+  g.style.gridTemplateColumns="repeat("+best.cols+",minmax(0,1fr))";g.style.gridAutoRows=ch+"px";
+  g.style.setProperty("--gap",gap+"px");g.style.setProperty("--ch",ch+"px");g.style.setProperty("--av",av+"px");
+  g.style.setProperty("--padl",padl+"px");g.style.setProperty("--padr",padr+"px");
+  g.style.setProperty("--pre",Math.max(18,Math.min(ch*.26,textW/5.4,60))+"px");
+  g.classList.toggle("compact",ch<120);
+}
+function setFit(on){
+  prefs.fit=!!on;store.set(LS.prefs,JSON.stringify(prefs));document.body.classList.toggle("fit",prefs.fit);
+  if(on){$("filter").value="";var el=document.documentElement;try{var r=el.requestFullscreen&&el.requestFullscreen();if(r&&r.catch)r.catch(function(){})}catch(e){}keepAwake()}
+  else if(document.fullscreenElement){try{document.exitFullscreen().catch(function(){})}catch(e){}}
+  renderAppel();
+}
+$("fitOn").onclick=function(){setFit(true)};$("fitOff").onclick=function(){setFit(false)};
+var rz;window.addEventListener("resize",function(){clearTimeout(rz);rz=setTimeout(function(){fitGrid();shrinkNames()},120)});
+document.body.classList.toggle("fit",!!prefs.fit);
+
+var wake=null;function keepAwake(){if(wake||!navigator.wakeLock)return;navigator.wakeLock.request("screen").then(function(w){wake=w;w.addEventListener("release",function(){wake=null})}).catch(function(){})}
+
+/* ---------- Fiche élève ---------- */
+function personKey(st){return st.nom?norm(st.nom)+"|"+norm(st.pre):st.id}
+function entriesOf(st){var k=personKey(st),out=[];models.forEach(function(m){m.students.forEach(function(s){if(personKey(s)===k)out.push({m:m,s:s})})});return out}
+function ficheHTML(st){
+  var en=entriesOf(st),first=en[0]?en[0].s:st,info={};
+  en.forEach(function(e){["tel","photos","med","lic"].forEach(function(k){if(e.s[k]&&!info[k])info[k]=e.s[k]})});
+  var h='<div class="fh">'+avatar(first)+'<h3>'+esc(first.pre?title(first.pre):first.nom)+(first.pre?'<small>'+esc(first.nom)+'</small>':"")+'</h3></div>';
+  if(info.med)h+='<div class="alertbox"><b>Médical / Commentaires</b>'+esc(info.med)+'</div>';
+  h+='<dl class="fields">';
+  h+='<dt>Cours</dt><dd>'+en.map(function(e){return esc(e.m.name)+(e.s.num?" · n° "+esc(e.s.num):"")}).join("\n")+'</dd>';
+  h+='<dt>N° TEL</dt><dd>'+(info.tel?esc(phone(info.tel)):'<span class="sub">—</span>')+'</dd>';
+  h+='<dt>Photos</dt><dd>'+(info.photos?esc(info.photos):'<span class="sub">—</span>')+'</dd>';
+  h+='<dt>Licence</dt><dd>'+(info.lic?esc(info.lic):'<span class="sub">—</span>')+'</dd>';
+  en.forEach(function(e){if(e.s.section)h+='<dt>Situation</dt><dd>'+esc(sentence(e.s.section))+' ('+esc(e.m.name)+')</dd>';e.s.extra.forEach(function(x){h+='<dt>'+esc(x.label)+'</dt><dd>'+esc(x.v)+'</dd>'})});
+  h+='</dl><div class="sect">Présences</div>';
+  en.forEach(function(e){
+    var past=e.m.dates.filter(function(d){return d.iso<=TODAY&&!d.dup}),p=past.filter(function(d){return C.present(e.m,d.col,e.s.r)}).length;
+    h+='<div class="crs"><h4>'+esc(e.m.name)+'<span>'+p+' / '+past.length+' séances'+(past.length?' · '+Math.round(p*100/past.length)+' %':"")+'</span></h4><div class="hist">'+
+      past.map(function(d){var on=C.present(e.m,d.col,e.s.r);return '<span class="h'+(on?" p":"")+'" title="'+(on?"Présent":"Absent")+'">'+esc(dLabel(d.iso))+'</span>'}).join("")+'</div></div>';
+  });
+  return h;
+}
+function openInfo(st){$("infoBody").innerHTML=ficheHTML(st);$("infoDlg").hidden=false;$("infoClose").focus()}
+$("infoClose").onclick=function(){$("infoDlg").hidden=true};
+$("infoDlg").addEventListener("click",function(e){if(e.target===$("infoDlg"))$("infoDlg").hidden=true});
+
+/* ---------- Vue Élèves ---------- */
+function persons(){var map={},out=[];models.forEach(function(m){m.students.forEach(function(s){var k=personKey(s);if(!map[k]){map[k]={key:k,s:s,courses:[],blob:""};out.push(map[k])}map[k].courses.push(m.name);map[k].blob+=" "+[s.pre,s.nom,s.tel,phone(s.tel),s.med,s.section,m.name].join(" ")})});
+  return out.sort(function(a,b){return (a.s.nom||a.s.pre).localeCompare(b.s.nom||b.s.pre,"fr")||a.s.pre.localeCompare(b.s.pre,"fr")})}
+function renderEleves(){var sel=$("qCourse"),cur=sel.value;sel.innerHTML='<option value="">Tous les cours</option>'+models.map(function(m){return '<option>'+esc(m.name)+'</option>'}).join("");sel.value=models.some(function(m){return m.name===cur})?cur:"";renderResults()}
+function renderResults(){
+  var q=norm($("q").value),c=$("qCourse").value,ps=persons().filter(function(p){return(!c||p.courses.indexOf(c)>=0)&&(!q||norm(p.blob).indexOf(q)>=0)});
+  $("qCount").textContent=ps.length+" élève"+(ps.length>1?"s":"");
+  var box=$("results");box.innerHTML="";
+  if(picked&&!ps.some(function(p){return p.key===picked}))picked=null;
+  if(!picked&&ps.length&&window.innerWidth>760)picked=ps[0].key;
+  ps.forEach(function(p){var b=document.createElement("button");b.type="button";b.className="res";b.setAttribute("aria-current",p.key===picked);
+    b.innerHTML=avatar(p.s)+'<span><b></b><span class="c"></span></span>';
+    b.querySelector("b").textContent=(p.s.pre?title(p.s.pre)+" ":"")+p.s.nom;b.querySelector(".c").textContent=p.courses.join(" · ");
+    b.onclick=function(){picked=p.key;renderResults();if(window.innerWidth<=760)$("fichePane").scrollIntoView({behavior:"smooth"})};box.appendChild(b)});
+  var sel=ps.find(function(p){return p.key===picked});
+  $("fichePane").innerHTML=sel?'<div class="fiche">'+ficheHTML(sel.s)+'</div>':'<div class="empty">Recherche un élève puis touche son nom pour voir sa fiche complète.</div>';
+}
+$("q").oninput=renderResults;$("qCourse").onchange=renderResults;
+
+/* ---------- Onglets ---------- */
+function show(v){var el=v==="eleves";if(el&&prefs.fit){prefs.fit=false;document.body.classList.remove("fit")}$("viewAppel").hidden=el;$("viewEleves").hidden=!el;$("coursebar").hidden=el;
+  $("tabAppel").setAttribute("aria-selected",!el);$("tabEleves").setAttribute("aria-selected",el);if(el)renderEleves();else{renderChips();renderAppel()}}
+$("tabAppel").onclick=function(){show("appel")};$("tabEleves").onclick=function(){show("eleves")};
+
+/* ---------- Ajout d'un élève (dans une ligne vide déjà préparée de la feuille) ---------- */
+function updateWhere(){var m=models.find(function(x){return x.name===$("aCours").value});
+  $("addWhere").textContent=!m?"":m.freeRows.length?"Sera écrit ligne "+m.freeRows[0]+" de la feuille « "+m.name+" », avant la ligne de total.":"";
+  $("addErr").textContent=m&&!m.freeRows.length?"Plus de ligne vide avant le total dans « "+m.name+" ». Ajoute une ligne dans Excel, puis « Réglages » › « Synchroniser maintenant ».":""}
+function openAdd(){if(!book)return;$("aCours").innerHTML=models.map(function(m){return '<option>'+esc(m.name)+'</option>'}).join("");$("aCours").value=course||models[0].name;
+  ["aNom","aPre","aTel","aMed"].forEach(function(i){$(i).value=""});$("aPhotos").value="";$("aLic").value="";updateWhere();$("addDlg").hidden=false;setTimeout(function(){$("aNom").focus()},30)}
+$("aCours").onchange=updateWhere;
+$("addBtn").onclick=openAdd;$("addBtn2").onclick=openAdd;$("addCancel").onclick=function(){$("addDlg").hidden=true};
+$("addDlg").addEventListener("click",function(e){if(e.target===$("addDlg"))$("addDlg").hidden=true});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){$("addDlg").hidden=true;$("infoDlg").hidden=true}});
+$("addForm").addEventListener("submit",function(e){
+  e.preventDefault();
+  var m=models.find(function(x){return x.name===$("aCours").value});
+  var nom=$("aNom").value.trim().toUpperCase(),pre=$("aPre").value.trim().toUpperCase();
+  if(!nom&&!pre){$("addErr").textContent="Indique au moins le nom ou le prénom.";return}
+  if(!m.freeRows.length){updateWhere();return}
+  if(book.demo){$("addErr").textContent="Relie ton fichier OneDrive pour ajouter un vrai élève.";return}
+  var r=m.freeRows[0],p=patches[m.name]=patches[m.name]||{},c=m.col;
+  var vals=[[c.nom,nom],[c.pre,pre],[c.tel,$("aTel").value.trim()],[c.photos,$("aPhotos").value],[c.med,$("aMed").value.trim()],[c.lic,$("aLic").value]];
+  vals.forEach(function(v){if(v[0]&&v[1])p[v[0]+r]={t:"s",v:v[1],g:r}});
+  savePatches();rebuildSheet(m.name);course=m.name;
+  var st=curModel().students.find(function(s){return s.r===r});
+  $("addDlg").hidden=true;renderChips();renderAppel();if(!$("viewEleves").hidden){picked=st?personKey(st):null;renderResults()}
+  toast((st?title(st.pre)+" "+st.nom:"Élève")+" ajouté ligne "+r+". Valide l'appel pour l'envoyer sur OneDrive.");
+});
+
+/* ---------- OneDrive : connexion Microsoft et synchronisation du fichier ---------- */
+var SCOPES=["Files.ReadWrite"],GRAPH="https://graph.microsoft.com/v1.0";
+var msalApp=null,account=null,validating=false,lastPull=0;
+function redirectUri(){return location.origin+location.pathname.replace(/index\.html$/,"")}
+function item(){try{return JSON.parse(store.get(LS.item)||"null")}catch(e){return null}}
+function setSync(state,text){var el=$("sync");el.className="sync "+(state||"");el.textContent=text||""}
+function fmtStamp(iso){var d=new Date(iso);return d.toLocaleDateString("fr-FR",{weekday:"short",day:"2-digit",month:"2-digit"})+" à "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}
+function showSync(){
+  if(!book){setSync("","");return}
+  if(book.demo){setSync("","Exemple : rien n'est envoyé");return}
+  var n=countPatches(),st=store.get(LS.synced);
+  if(validating){setSync("","Envoi vers OneDrive…");return}
+  if(n&&store.get(LS.pending))setSync("off",n+" coche(s) en attente d'envoi");
+  else if(n)setSync("off",n+" coche(s) à valider");
+  else setSync("ok","OneDrive à jour"+(st?" · "+fmtStamp(st):""));
+}
+function ask(t,p,yes){return new Promise(function(res){$("askT").textContent=t;$("askP").textContent=p;$("askYes").textContent=yes;$("askDlg").hidden=false;
+  $("askYes").onclick=function(){$("askDlg").hidden=true;res(true)};$("askNo").onclick=function(){$("askDlg").hidden=true;res(false)}})}
+
+async function initAuth(){
+  var cid=(store.get(LS.client)||"").trim();if(!cid||typeof msal==="undefined")return false;
+  msalApp=new msal.PublicClientApplication({
+    auth:{clientId:cid,authority:"https://login.microsoftonline.com/consumers",redirectUri:redirectUri(),navigateToLoginRequestUrl:false},
+    cache:{cacheLocation:"localStorage"}});
+  await msalApp.initialize();
+  var res=await msalApp.handleRedirectPromise();
+  account=(res&&res.account)||msalApp.getActiveAccount()||msalApp.getAllAccounts()[0]||null;
+  if(account)msalApp.setActiveAccount(account);
+  return true;
+}
+function needsInteraction(e){return (typeof msal!=="undefined"&&e instanceof msal.InteractionRequiredAuthError)||/interaction_required|login_required|consent_required|no_account|no_tokens|invalid_grant/.test((e&&(e.errorCode||e.message))||"")}
+async function token(){
+  if(!account)throw {code:"signin"};
+  try{return (await msalApp.acquireTokenSilent({scopes:SCOPES,account:account})).accessToken}
+  catch(e){
+    if(needsInteraction(e)&&navigator.onLine){store.set(LS.resume,"1");await msalApp.acquireTokenRedirect({scopes:SCOPES,account:account});return new Promise(function(){})}
+    throw {code:navigator.onLine?"auth":"offline",cause:e};
+  }
+}
+async function graph(path,opts){
+  opts=opts||{};var t=await token(),h=Object.assign({Authorization:"Bearer "+t},opts.headers||{});
+  try{return await fetch(path.indexOf("http")===0?path:GRAPH+path,Object.assign({},opts,{headers:h}))}
+  catch(e){throw {code:"offline"}}
+}
+/* Lit la dernière version du fichier sur OneDrive ; ré-applique les coches en attente si le fichier a changé. */
+async function pullLatest(force){
+  var it=item();if(!it)throw {code:"nofile"};
+  var r=await graph("/me/drive/items/"+encodeURIComponent(it.id));
+  if(r.status===404)throw {code:"gone"};
+  if(r.status===401||r.status===403)throw {code:"auth"};
+  if(!r.ok)throw {code:"http",status:r.status};
+  var meta=await r.json();lastPull=Date.now();
+  if(!force&&book&&!book.demo&&meta.eTag===store.get(LS.etag))return false;
+  var dl;try{dl=await fetch(meta["@microsoft.graph.downloadUrl"])}catch(e){throw {code:"offline"}}
+  if(!dl.ok)throw {code:"http",status:dl.status};
+  var buf=await dl.arrayBuffer(),nb=await parseBook(buf,meta.name,false),dropped=[];
+  var np={};
+  Object.keys(patches).forEach(function(name){
+    var sh=nb.sheets.find(function(x){return x.name===name});
+    if(!sh){dropped.push(name);return}
+    var rb=C.rebase(sh.xml,patches[name],nb.ss,sh.name,sh.path);
+    if(Object.keys(rb.patches).length)np[name]=rb.patches;dropped=dropped.concat(rb.dropped);
+  });
+  patches=np;store.set(LS.patch,JSON.stringify(patches));
+  store.set(LS.base,b64(buf));store.set(LS.name,meta.name);store.set(LS.etag,meta.eTag);
+  store.set(LS.item,JSON.stringify(Object.assign({},it,{name:meta.name,folder:folderOf(meta)})));
+  useBook(nb);
+  if(dropped.length)toast("Le fichier a changé sur OneDrive. "+dropped.length+" coche(s) n'ont pas retrouvé leur élève ou leur date et ont été écartées.");
+  return true;
+}
+function folderOf(meta){var p=(meta.parentReference&&meta.parentReference.path)||"";p=decodeURIComponent(p.replace(/^\/drive\/root:?/,""));return p||"/"}
+async function currentBlob(){
+  var zip=book.zip,changed={};
+  book.sheets.forEach(function(sh){var p=patches[sh.name];if(p&&Object.keys(p).length){changed[sh.name]=C.applyPatches(sh.xml,p,book.ss,sh.name,sh.path);zip.file(sh.path,changed[sh.name],{createFolders:false})}});
+  var blob=await zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  book.sheets.forEach(function(sh){if(changed[sh.name])zip.file(sh.path,sh.xml,{createFolders:false})});
+  return {blob:blob,changed:changed};
+}
+function commit(changed,bytesB64){book.sheets.forEach(function(sh){if(changed[sh.name])sh.xml=changed[sh.name]});patches={};origCache={};store.set(LS.patch,"{}");store.set(LS.base,bytesB64);buildModels();renderAll()}
+function updateSaveBtn(){var n=book&&!book.demo?countPatches():0,b=$("save");if(!validating)b.textContent=n?"Valider l'appel ("+n+")":"Valider l'appel";b.disabled=validating||!book||book.demo;showSync()}
+function syncError(e,quiet){
+  store.set(LS.pending,"1");var c=e&&e.code;
+  var msg=c==="offline"?"Pas de réseau. Les coches restent sur la tablette et partiront automatiquement au retour du réseau."
+    :c==="locked"?"Le fichier est verrouillé sur OneDrive (ouvert ailleurs ?). Les coches sont gardées ; réessaie dans quelques minutes."
+    :c==="gone"?"Le fichier est introuvable sur OneDrive (déplacé ou supprimé ?). Choisis-le à nouveau dans « Réglages »."
+    :c==="auth"||c==="signin"?"La connexion Microsoft a expiré. Ouvre « Réglages » et reconnecte-toi ; les coches sont gardées."
+    :c==="conflict"?"Le fichier change en ce moment sur OneDrive. Les coches sont gardées ; réessaie dans un instant."
+    :"L'envoi vers OneDrive a échoué"+(e&&e.status?" (erreur "+e.status+")":"")+". Les coches sont gardées sur la tablette ; réessaie.";
+  if(!quiet||c!=="offline")toast(msg);
+}
+/* Valider l'appel : relit le fichier, applique les coches, réécrit le fichier au même endroit. */
+async function validate(auto){
+  if(validating||!book||book.demo)return;
+  if(!countPatches()){if(!auto)toast("Aucune coche à valider : le fichier OneDrive est déjà à jour.");return}
+  validating=true;$("save").textContent="Envoi vers OneDrive…";updateSaveBtn();
+  try{
+    for(var attempt=0;attempt<3;attempt++){
+      await pullLatest(false);
+      if(!countPatches()){store.del(LS.pending);store.set(LS.synced,new Date().toISOString());toast("Le fichier OneDrive contenait déjà cet appel.");return}
+      var r=await currentBlob();
+      var resp=await graph("/me/drive/items/"+encodeURIComponent(item().id)+"/content",{method:"PUT",
+        headers:{"Content-Type":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","If-Match":store.get(LS.etag)||"*"},body:r.blob});
+      if(resp.status===412||resp.status===409){store.del(LS.etag);continue}
+      if(resp.status===423)throw {code:"locked"};
+      if(resp.status===404)throw {code:"gone"};
+      if(resp.status===401||resp.status===403)throw {code:"auth"};
+      if(!resp.ok)throw {code:"http",status:resp.status};
+      var meta=await resp.json();
+      commit(r.changed,b64(await r.blob.arrayBuffer()));
+      store.set(LS.etag,meta.eTag);store.set(LS.synced,new Date().toISOString());store.del(LS.pending);
+      toast("Appel validé : « "+meta.name+" » est à jour sur OneDrive.");
+      return;
+    }
+    throw {code:"conflict"};
+  }catch(e){syncError(e,auto)}
+  finally{validating=false;updateSaveBtn()}
+}
+$("save").onclick=function(){validate(false)};
+window.addEventListener("online",function(){if(countPatches()&&store.get(LS.pending))validate(true)});
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState!=="visible"||!book||book.demo||validating||!account)return;
+  if(countPatches()&&store.get(LS.pending)&&navigator.onLine){validate(true);return}
+  if(Date.now()-lastPull>120000)pullLatest(false).then(showSync).catch(function(){});
+});
+
+/* ---------- Écrans d'installation ---------- */
+function gate(step){
+  $("gate").hidden=!step;["Id","Login","File"].forEach(function(k){$("gStep"+k).hidden=step!==k});
+  $("gBack").hidden=!(book&&!book.demo&&item());$("gDemo").hidden=!!(book&&!book.demo);
+  if(step==="Id"){$("gRedirect").textContent=redirectUri();$("gClient").value=store.get(LS.client)||"";$("gClientErr").textContent=""}
+  if(step==="File"){$("gFileErr").textContent="";searchFiles()}
+}
+$("gClientOk").onclick=async function(){
+  var v=$("gClient").value.trim();
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)){$("gClientErr").textContent="Cet identifiant n'a pas le bon format : il ressemble à 1a2b3c4d-1234-5678-9abc-1234567890ab.";return}
+  store.set(LS.client,v);
+  try{await initAuth();gate(account?(item()?null:"File"):"Login")}catch(e){$("gClientErr").textContent="Impossible d'initialiser la connexion Microsoft. Vérifie l'identifiant."}
+};
+$("gLogin").onclick=async function(){
+  $("gLoginErr").textContent="";
+  if(!navigator.onLine){$("gLoginErr").textContent="Pas de réseau : connecte la tablette à Internet pour te connecter.";return}
+  try{await msalApp.loginRedirect({scopes:SCOPES,prompt:"select_account"})}catch(e){$("gLoginErr").textContent="La connexion n'a pas pu démarrer ("+((e&&e.errorCode)||"erreur")+"). Vérifie l'ID d'application et l'adresse de redirection déclarée."}
+};
+async function searchFiles(){
+  var q=$("gQ").value.trim()||"xlsx",box=$("gFiles");box.innerHTML='<div class="sub">Recherche dans OneDrive…</div>';
+  try{
+    var r=await graph("/me/drive/root/search(q='"+encodeURIComponent(q.replace(/'/g,"''"))+"')?$top=50&$select=id,name,file,parentReference,lastModifiedDateTime");
+    if(!r.ok)throw {code:r.status===401||r.status===403?"auth":"http",status:r.status};
+    var list=((await r.json()).value||[]).filter(function(f){return f.file&&/\.xlsx$/i.test(f.name)});
+    box.innerHTML="";
+    if(!list.length){box.innerHTML='<div class="sub">Aucun fichier .xlsx trouvé pour « '+esc(q)+' ». Essaie un autre mot du nom du fichier.</div>';return}
+    list.forEach(function(f){var b=document.createElement("button");b.type="button";
+      b.innerHTML='<b></b><span></span>';b.querySelector("b").textContent=f.name;
+      b.querySelector("span").textContent=folderOf(f)+" · modifié le "+fmtStamp(f.lastModifiedDateTime);
+      b.onclick=function(){chooseFile(f)};box.appendChild(b)});
+  }catch(e){box.innerHTML="";$("gFileErr").textContent=e&&e.code==="offline"?"Pas de réseau : connecte la tablette à Internet.":"La recherche a échoué"+(e&&e.status?" (erreur "+e.status+")":"")+". Reconnecte-toi si le problème persiste."}
+}
+$("gSearch").onclick=searchFiles;$("gQ").addEventListener("keydown",function(e){if(e.key==="Enter")searchFiles()});
+async function chooseFile(f){
+  var it=item();
+  if(it&&it.id!==f.id&&countPatches()&&!(await ask("Changer de fichier ?",countPatches()+" coche(s) pas encore envoyées seront abandonnées.","Changer")))return;
+  if(!it||it.id!==f.id){patches={};store.set(LS.patch,"{}");store.del(LS.pending);store.del(LS.etag);store.del(LS.synced)}
+  store.set(LS.item,JSON.stringify({id:f.id,name:f.name,folder:folderOf(f)}));
+  $("gFiles").innerHTML='<div class="sub">Chargement de « '+esc(f.name)+' »…</div>';
+  try{await pullLatest(true);store.set(LS.synced,new Date().toISOString());gate(null);
+    var n=models.reduce(function(a,m){return a+m.students.length},0);toast(models.length+" cours chargés, "+n+" inscriptions.")}
+  catch(e){$("gFiles").innerHTML="";$("gFileErr").textContent=e&&e.message==="noSheets"?"Ce fichier ne ressemble pas à un fichier d'appel (pas de colonne « NOMS »).":"Le fichier n'a pas pu être chargé"+(e&&e.status?" (erreur "+e.status+")":"")+"."}
+}
+$("gDemo").onclick=async function(){try{await openBytes(await demoBytes(),"Exemple.xlsx",true);gate(null)}catch(e){}};
+$("gBack").onclick=function(){gate(null)};
+
+/* ---------- Réglages ---------- */
+function openSettings(){
+  var it=item(),st=store.get(LS.synced),rows=[
+    ["Compte",account?(account.username||account.name||"Connecté"):"Non connecté"],
+    ["Fichier",it?it.name:"Aucun"],["Dossier OneDrive",it?it.folder:"—"],
+    ["Dernière synchro",st?fmtStamp(st):"—"],["En attente",countPatches()?countPatches()+" coche(s)":"Rien"]];
+  $("setInfo").innerHTML=rows.map(function(r){return '<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>'}).join("");
+  $("setErr").textContent="";$("setSync").disabled=!account||!it;$("setCopy").disabled=!book||book.demo;$("setOut").disabled=!account;
+  $("setDlg").hidden=false;
+}
+$("setBtn").onclick=openSettings;$("setClose").onclick=function(){$("setDlg").hidden=true};
+$("setDlg").addEventListener("click",function(e){if(e.target===$("setDlg"))$("setDlg").hidden=true});
+$("setSync").onclick=async function(){
+  $("setErr").textContent="";
+  try{if(countPatches()){$("setDlg").hidden=true;await validate(false);return}
+    var ch=await pullLatest(false);store.set(LS.synced,new Date().toISOString());showSync();openSettings();toast(ch?"Nouvelle version du fichier chargée depuis OneDrive.":"Le fichier est déjà à jour.")}
+  catch(e){$("setErr").textContent=e&&e.code==="offline"?"Pas de réseau.":e&&e.code==="gone"?"Fichier introuvable : choisis-le à nouveau.":"La synchronisation a échoué"+(e&&e.status?" (erreur "+e.status+")":"")+"."}
+};
+$("setFile").onclick=function(){$("setDlg").hidden=true;if(!msalApp)gate("Id");else if(!account)gate("Login");else gate("File")};
+$("setId").onclick=function(){$("setDlg").hidden=true;gate("Id")};
+$("setCopy").onclick=async function(){
+  var r=await currentBlob(),a=document.createElement("a");a.href=URL.createObjectURL(r.blob);a.download=book.fileName;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},2000);
+};
+$("setOut").onclick=async function(){
+  if(countPatches()&&!(await ask("Se déconnecter ?",countPatches()+" coche(s) n'ont pas encore été envoyées. Elles restent sur la tablette et partiront à la prochaine connexion.","Se déconnecter")))return;
+  try{await msalApp.clearCache({account:account})}catch(e){}
+  account=null;$("setDlg").hidden=true;gate("Login");
+};
+
+var tt;function toast(m){var t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(function(){t.hidden=true},4200)}
+
+/* ---------- Exemple fictif (même structure que le vrai fichier) ---------- */
+async function demoBytes(){
+  function col(n){var s="";while(n>0){var m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=(n-m-1)/26}return s}
+  function sheet(titleTxt,first,step,kids){
+    var serial=function(iso){return Math.round((Date.parse(iso+"T00:00:00Z")-Date.UTC(1899,11,30))/864e5)};
+    var dates=[];for(var i=0;i<10;i++){var d=new Date(Date.parse(first+"T00:00:00Z")+i*step*864e5);dates.push(serial(d.toISOString().slice(0,10)))}
+    var x='<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';
+    var is=function(c,r,v){return v?'<c r="'+c+r+'" t="inlineStr"><is><t>'+v+'</t></is></c>':""};
+    x+='<row r="1">'+is("A",1,titleTxt)+'</row><row r="2">'+["NOMS","PRENOMS","N° TEL","Photos","Médical / Commentaires","Licence"].map(function(h,i){return is(col(i+3),2,h)}).join("")+dates.map(function(s,i){return '<c r="'+col(i+9)+'2"><v>'+s+'</v></c>'}).join("")+'</row>';
+    var last=kids.length+2;
+    kids.forEach(function(k,i){var r=i+3;x+='<row r="'+r+'">'+(k[0]?'<c r="A'+r+'"><v>'+(i+1)+'</v></c>':"")+is("C",r,k[0])+is("D",r,k[1])+is("E",r,k[2])+is("F",r,k[3])+is("G",r,k[4])+is("H",r,k[5])+
+      dates.map(function(s,j){return '<c r="'+col(j+9)+r+'" t="b"><v>'+((k[6]||0)>j&&(i+j)%3?1:0)+'</v></c>'}).join("")+'</row>'});
+    for(var e=0;e<3;e++){var r2=last+1+e;x+='<row r="'+r2+'">'+dates.map(function(s,j){return '<c r="'+col(j+9)+r2+'" t="b"><v>0</v></c>'}).join("")+'</row>'}
+    var tr=last+5;x+='<row r="'+tr+'">'+dates.map(function(s,j){return '<c r="'+col(j+9)+tr+'"><f>COUNTIF('+col(j+9)+'3:'+col(j+9)+(last+3)+',TRUE)</f><v>0</v></c>'}).join("")+'</row>';
+    return x+'</sheetData></worksheet>';
+  }
+  var z=new JSZip();
+  z.file("[Content_Types].xml",'<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>');
+  z.file("xl/workbook.xml",'<workbook xmlns:r="r"><sheets><sheet name="Baby mardi" sheetId="1" r:id="rId1"/><sheet name="Cours 1" sheetId="2" r:id="rId2"/></sheets></workbook>');
+  z.file("xl/_rels/workbook.xml.rels",'<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Target="worksheets/sheet2.xml"/></Relationships>');
+  var t=new Date(TODAY+"T00:00:00Z"),mon=new Date(t-((t.getUTCDay()+6)%7)*864e5-21*864e5).toISOString().slice(0,10);
+  z.file("xl/worksheets/sheet1.xml",sheet("COURS : BABY - mardi 18h-19h (exemple)",new Date(Date.parse(mon)+864e5).toISOString().slice(0,10),7,[
+    ["MARTIN","LÉA","06 00 00 00 01","","","",4],["DIALLO","MOUSSA","06 00 00 00 02","NON","Allergie aux arachides","NON",4],["NGUYEN","LINA","06 00 00 00 03","","","",3],
+    ["FERREIRA","LÉO","06 00 00 00 04","","","",4],["BENALI","INÈS","06 00 00 00 05","","Kimono en commande","",2],["PAS DE FEUILLE D'INSCRIPTION","","","","","",0],["","SACHA","","","","",1]]));
+  z.file("xl/worksheets/sheet2.xml",sheet("COURS : 1 (exemple)",mon,3.5,[
+    ["AHMED","YANIS","06 00 00 00 06","","","",6],["CAMARA","AÏCHA","06 00 00 00 07","","Asthme","",6],["DUBOIS","HUGO","06 00 00 00 08","","","NON",5],
+    ["KONÉ","FATOU","06 00 00 00 09","","","",6],["SILVA","NOAH","06 00 00 00 10","NON","","",3],["TRAORÉ","ADAM","06 00 00 00 11","","","",6]]));
+  return z.generateAsync({type:"uint8array"});
+}
+
+/* ---------- Démarrage ---------- */
+(async function start(){
+  if(typeof JSZip==="undefined"){$("grid").innerHTML='<div class="empty">Le lecteur Excel n\'a pas pu se charger. Recharge la page.</div>';return}
+  if("serviceWorker" in navigator&&location.protocol==="https:"){try{navigator.serviceWorker.register("sw.js")}catch(e){}}
+  /* 1. Afficher tout de suite la dernière version connue (fonctionne sans réseau) */
+  var b=store.get(LS.base);
+  if(b&&item()){try{await openBytes(unb64(b),store.get(LS.name)||"Appel.xlsx",false)}catch(e){}}
+  /* 2. Connexion Microsoft */
+  try{await initAuth()}catch(e){}
+  if(!msalApp){gate("Id");return}
+  if(!account){if(book&&!book.demo){showSync();setSync("off","Reconnexion Microsoft nécessaire")}gate("Login");return}
+  if(!item()){gate("File");return}
+  gate(null);
+  /* 3. Récupérer la dernière version sur OneDrive, puis envoyer ce qui attend */
+  try{
+    await pullLatest(!book);
+    if(countPatches()&&(store.get(LS.pending)||store.get(LS.resume))){store.del(LS.resume);await validate(true)}
+  }catch(e){
+    if(!book){$("grid").innerHTML='<div class="empty">Impossible de lire le fichier sur OneDrive pour le moment. Vérifie la connexion puis recharge la page.</div>'}
+    else if(e&&e.code==="offline")setSync("off","Hors ligne · dernière version gardée sur la tablette");
+    else syncError(e,true);
+  }
+  showSync();
+})();
+})();
+</script>
+</body>
+</html>
