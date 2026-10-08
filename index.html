@@ -702,10 +702,11 @@ $("addForm").addEventListener("submit",function(e){
 });
 
 /* ---------- OneDrive : connexion Microsoft et synchronisation du fichier ---------- */
-var SCOPES=["Files.ReadWrite"],GRAPH="https://graph.microsoft.com/v1.0",DEFAULT_CLIENT="266375cc-ffd0-467f-80f3-d04ec43858e8";
+var SCOPES=["Files.ReadWrite.All"],GRAPH="https://graph.microsoft.com/v1.0",DEFAULT_CLIENT="266375cc-ffd0-467f-80f3-d04ec43858e8";
 var msalApp=null,account=null,validating=false,lastPull=0;
 function redirectUri(){return location.origin+location.pathname.replace(/index\.html$/,"")}
 function item(){try{return JSON.parse(store.get(LS.item)||"null")}catch(e){return null}}
+function itemPath(it){it=it||item();return (it.driveId?"/drives/"+encodeURIComponent(it.driveId):"/me/drive")+"/items/"+encodeURIComponent(it.id)}
 function setSync(state,text){var el=$("sync");el.className="sync "+(state||"");el.textContent=text||""}
 function fmtStamp(iso){var d=new Date(iso);return d.toLocaleDateString("fr-FR",{weekday:"short",day:"2-digit",month:"2-digit"})+" à "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}
 function showSync(){
@@ -748,8 +749,8 @@ async function graph(path,opts){
 /* Lit la dernière version du fichier sur OneDrive ; ré-applique les coches en attente si le fichier a changé. */
 async function pullLatest(force){
   var it=item();if(!it)throw {code:"nofile"};
-  var r=await graph("/me/drive/items/"+encodeURIComponent(it.id));
-  if(r.status===404)throw {code:"gone"};
+  var r=await graph(itemPath(it));
+  if(r.status===404||r.status===400)throw {code:"gone"};
   if(r.status===401||r.status===403)throw {code:"auth"};
   if(!r.ok)throw {code:"http",status:r.status};
   var meta=await r.json();lastPull=Date.now();
@@ -766,12 +767,12 @@ async function pullLatest(force){
   });
   patches=np;store.set(LS.patch,JSON.stringify(patches));
   store.set(LS.base,b64(buf));store.set(LS.name,meta.name);store.set(LS.etag,meta.eTag);
-  store.set(LS.item,JSON.stringify(Object.assign({},it,{name:meta.name,folder:folderOf(meta)})));
+  store.set(LS.item,JSON.stringify(Object.assign({},it,{name:meta.name,folder:folderOf(meta),driveId:it.driveId||(meta.parentReference&&meta.parentReference.driveId)||""})));
   useBook(nb);
   if(dropped.length)toast("Le fichier a changé sur OneDrive. "+dropped.length+" coche(s) n'ont pas retrouvé leur élève ou leur date et ont été écartées.");
   return true;
 }
-function folderOf(meta){var p=(meta.parentReference&&meta.parentReference.path)||"";p=decodeURIComponent(p.replace(/^\/drive\/root:?/,""));return p||"/"}
+function folderOf(meta){var p=(meta.parentReference&&meta.parentReference.path)||"";p=decodeURIComponent(p.replace(/^\/drives?(\/[^\/]+)?\/root:?/,""));return p||"/"}
 async function currentBlob(){
   var zip=book.zip,changed={};
   book.sheets.forEach(function(sh){var p=patches[sh.name];if(p&&Object.keys(p).length){changed[sh.name]=C.applyPatches(sh.xml,p,book.ss,sh.name,sh.path);zip.file(sh.path,changed[sh.name],{createFolders:false})}});
@@ -801,7 +802,7 @@ async function validate(auto){
       await pullLatest(false);
       if(!countPatches()){store.del(LS.pending);store.set(LS.synced,new Date().toISOString());toast("Le fichier OneDrive contenait déjà cet appel.");return}
       var r=await currentBlob();
-      var resp=await graph("/me/drive/items/"+encodeURIComponent(item().id)+"/content",{method:"PUT",
+      var resp=await graph(itemPath()+"/content",{method:"PUT",
         headers:{"Content-Type":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","If-Match":store.get(LS.etag)||"*"},body:r.blob});
       if(resp.status===412||resp.status===409){store.del(LS.etag);continue}
       if(resp.status===423)throw {code:"locked"};
@@ -847,9 +848,9 @@ $("gLogin").onclick=async function(){
 async function searchFiles(){
   var q=$("gQ").value.trim()||"xlsx",box=$("gFiles");box.innerHTML='<div class="sub">Recherche dans OneDrive…</div>';
   try{
-    var r=await graph("/me/drive/root/search(q='"+encodeURIComponent(q.replace(/'/g,"''"))+"')?$top=50&$select=id,name,file,parentReference,lastModifiedDateTime");
+    var r=await graph("/me/drive/root/search(q='"+encodeURIComponent(q.replace(/'/g,"''"))+"')?$top=50&$select=id,name,file,parentReference,lastModifiedDateTime,remoteItem");
     if(!r.ok)throw {code:r.status===401||r.status===403?"auth":"http",status:r.status};
-    var list=((await r.json()).value||[]).filter(function(f){return f.file&&/\.xlsx$/i.test(f.name)});
+    var seen={},list=((await r.json()).value||[]).filter(function(f){var k=f.id;if(!f.file||!/\.xlsx$/i.test(f.name)||seen[k])return false;seen[k]=1;return true});
     box.innerHTML="";
     if(!list.length){box.innerHTML='<div class="sub">Aucun fichier .xlsx trouvé pour « '+esc(q)+' ». Essaie un autre mot du nom du fichier.</div>';return}
     list.forEach(function(f){var b=document.createElement("button");b.type="button";
@@ -863,7 +864,7 @@ async function chooseFile(f){
   var it=item();
   if(it&&it.id!==f.id&&countPatches()&&!(await ask("Changer de fichier ?",countPatches()+" coche(s) pas encore envoyées seront abandonnées.","Changer")))return;
   if(!it||it.id!==f.id){patches={};store.set(LS.patch,"{}");store.del(LS.pending);store.del(LS.etag);store.del(LS.synced)}
-  store.set(LS.item,JSON.stringify({id:f.id,name:f.name,folder:folderOf(f)}));
+  store.set(LS.item,JSON.stringify({id:f.id,driveId:(f.parentReference&&f.parentReference.driveId)||"",name:f.name,folder:folderOf(f)}));
   $("gFiles").innerHTML='<div class="sub">Chargement de « '+esc(f.name)+' »…</div>';
   try{await pullLatest(true);store.set(LS.synced,new Date().toISOString());gate(null);
     var n=models.reduce(function(a,m){return a+m.students.length},0);toast(models.length+" cours chargés, "+n+" inscriptions.")}
