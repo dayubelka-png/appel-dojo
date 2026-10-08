@@ -268,14 +268,14 @@ body.fit .info{width:max(40px,calc(var(--ch)*.3));height:max(40px,calc(var(--ch)
     <div class="err" id="gClientErr"></div>
   </div>
   <div class="box" id="gStepLogin" hidden>
-    <small class="k">Première installation · 2 sur 3</small>
+    <small class="k">Première installation · 1 sur 2</small>
     <h2>Connexion à OneDrive</h2>
     <p>Connecte-toi avec le compte Microsoft qui contient le fichier des appels. La tablette restera connectée.</p>
     <div class="row"><button class="btn primary" id="gLogin">Se connecter avec Microsoft</button></div>
     <div class="err" id="gLoginErr"></div>
   </div>
   <div class="box" id="gStepFile" hidden>
-    <small class="k">Première installation · 3 sur 3</small>
+    <small class="k">Première installation · 2 sur 2</small>
     <h2>Choisir le fichier des appels</h2>
     <p>Recherche le fichier Excel dans ton OneDrive. La page le lira et le mettra à jour à chaque validation d'appel.</p>
     <div class="row"><input type="search" id="gQ" value="Appel" aria-label="Nom du fichier"><button class="btn primary" id="gSearch">Rechercher</button></div>
@@ -702,7 +702,7 @@ $("addForm").addEventListener("submit",function(e){
 });
 
 /* ---------- OneDrive : connexion Microsoft et synchronisation du fichier ---------- */
-var SCOPES=["Files.ReadWrite"],GRAPH="https://graph.microsoft.com/v1.0";
+var SCOPES=["Files.ReadWrite"],GRAPH="https://graph.microsoft.com/v1.0",DEFAULT_CLIENT="266375cc-ffd0-467f-80f3-d04ec43858e8";
 var msalApp=null,account=null,validating=false,lastPull=0;
 function redirectUri(){return location.origin+location.pathname.replace(/index\.html$/,"")}
 function item(){try{return JSON.parse(store.get(LS.item)||"null")}catch(e){return null}}
@@ -721,7 +721,7 @@ function ask(t,p,yes){return new Promise(function(res){$("askT").textContent=t;$
   $("askYes").onclick=function(){$("askDlg").hidden=true;res(true)};$("askNo").onclick=function(){$("askDlg").hidden=true;res(false)}})}
 
 async function initAuth(){
-  var cid=(store.get(LS.client)||"").trim();if(!cid||typeof msal==="undefined")return false;
+  var cid=(store.get(LS.client)||DEFAULT_CLIENT||"").trim();if(!cid||typeof msal==="undefined")return false;
   msalApp=new msal.PublicClientApplication({
     auth:{clientId:cid,authority:"https://login.microsoftonline.com/consumers",redirectUri:redirectUri(),navigateToLoginRequestUrl:false},
     cache:{cacheLocation:"localStorage"}});
@@ -830,7 +830,7 @@ document.addEventListener("visibilitychange",function(){
 function gate(step){
   $("gate").hidden=!step;["Id","Login","File"].forEach(function(k){$("gStep"+k).hidden=step!==k});
   $("gBack").hidden=!(book&&!book.demo&&item());$("gDemo").hidden=!!(book&&!book.demo);
-  if(step==="Id"){$("gRedirect").textContent=redirectUri();$("gClient").value=store.get(LS.client)||"";$("gClientErr").textContent=""}
+  if(step==="Id"){$("gRedirect").textContent=redirectUri();$("gClient").value=store.get(LS.client)||DEFAULT_CLIENT||"";$("gClientErr").textContent=""}
   if(step==="File"){$("gFileErr").textContent="";searchFiles()}
 }
 $("gClientOk").onclick=async function(){

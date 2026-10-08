@@ -1,5 +1,5 @@
 /* Garde la page disponible sans réseau. Ne touche jamais aux échanges avec Microsoft/OneDrive. */
-const CACHE = "appel-dojo-v1";
+const CACHE = "appel-dojo-v2";
 const FILES = ["./", "index.html", "jszip.min.js", "msal-browser.min.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => {
