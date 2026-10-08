@@ -938,7 +938,7 @@ async function demoBytes(){
 /* ---------- Démarrage ---------- */
 (async function start(){
   if(typeof JSZip==="undefined"){$("grid").innerHTML='<div class="empty">Le lecteur Excel n\'a pas pu se charger. Recharge la page.</div>';return}
-  if("serviceWorker" in navigator&&location.protocol==="https:"){try{navigator.serviceWorker.register("sw.js")}catch(e){}}
+  if("serviceWorker" in navigator&&location.protocol==="https:"){try{navigator.serviceWorker.register("sw.js",{updateViaCache:"none"})}catch(e){}}
   /* 1. Afficher tout de suite la dernière version connue (fonctionne sans réseau) */
   var b=store.get(LS.base);
   if(b&&item()){try{await openBytes(unb64(b),store.get(LS.name)||"Appel.xlsx",false)}catch(e){}}
